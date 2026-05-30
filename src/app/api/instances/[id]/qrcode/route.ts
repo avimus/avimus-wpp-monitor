@@ -62,6 +62,7 @@ export async function POST(
     await supabase
       .from("instances")
       .update({
+        worldmensage_instance_id: result.instance,
         current_status: "reconnecting",
         last_sync_at: new Date().toISOString(),
       })
