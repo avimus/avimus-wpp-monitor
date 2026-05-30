@@ -33,6 +33,13 @@ export async function POST(
     )
   }
 
+  if (!instance.worldmensage_instance_id) {
+    return NextResponse.json(
+      { error: "Instance has no Worldmensage ID configured." },
+      { status: 422 }
+    )
+  }
+
   const reconnectable = ["disconnected", "reconnecting"]
   if (!reconnectable.includes(instance.current_status)) {
     return NextResponse.json(
@@ -56,7 +63,6 @@ export async function POST(
       .from("instances")
       .update({
         current_status: "reconnecting",
-        worldmensage_instance_id: result.instance,
         last_sync_at: new Date().toISOString(),
       })
       .eq("id", params.id)
