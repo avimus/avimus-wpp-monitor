@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { createInstance } from "@/lib/worldmensage/client"
+import { connectInstance } from "@/lib/worldmensage/client"
 
 export async function POST(
   _: Request,
@@ -18,7 +18,7 @@ export async function POST(
 
   const { data: instance, error } = await supabase
     .from("instances")
-    .select("id, current_status, worldmensage_nome, worldmensage_instance_id, worldmensage_token")
+    .select("id, current_status, worldmensage_nome, worldmensage_instance_id")
     .eq("id", params.id)
     .single()
 
@@ -26,20 +26,11 @@ export async function POST(
     return NextResponse.json({ error: "Instance not found" }, { status: 404 })
   }
 
-  if (!instance.worldmensage_token) {
-    return NextResponse.json(
-      { error: "Instance has no token configured." },
-      { status: 422 }
-    )
-  }
+  const instanceName = instance.worldmensage_nome ?? instance.worldmensage_instance_id
 
-  // worldmensage_nome é o identificador fixo para /instance-create.
-  // Fallback para worldmensage_instance_id em instâncias cadastradas antes desta coluna existir.
-  const nomeParaChamada = instance.worldmensage_nome ?? instance.worldmensage_instance_id
-
-  if (!nomeParaChamada) {
+  if (!instanceName) {
     return NextResponse.json(
-      { error: "Instance has no Worldmensage nome configured." },
+      { error: "Instance has no Evolution name configured." },
       { status: 422 }
     )
   }
@@ -56,24 +47,25 @@ export async function POST(
   }
 
   try {
-    const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook/worldmensage`
-    const result = await createInstance(
-      nomeParaChamada,
-      webhookUrl,
-      instance.worldmensage_token
-    )
+    const result = await connectInstance(instanceName)
+
+    if (!result.base64) {
+      return NextResponse.json(
+        { error: "Evolution did not return a QR Code. Instance may already be connected." },
+        { status: 502 }
+      )
+    }
 
     await supabase
       .from("instances")
       .update({
-        worldmensage_instance_id: result.instance,
         current_status: "reconnecting",
         last_sync_at: new Date().toISOString(),
       })
       .eq("id", params.id)
 
     return NextResponse.json({
-      qrcode: result.qrcode,
+      qrcode: result.base64,
       expires_in_seconds: 30,
     })
   } catch {

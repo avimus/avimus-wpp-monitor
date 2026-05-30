@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
 import type { InstanceStatus } from "@/types"
 
-const CONNECTION_MAP: Record<string, InstanceStatus> = {
+const STATE_MAP: Record<string, InstanceStatus> = {
   open: "connected",
   close: "disconnected",
+  closing: "disconnected",
 }
 
 function getServiceClient() {
@@ -15,7 +16,11 @@ function getServiceClient() {
 }
 
 export async function POST(request: NextRequest) {
-  let body: { type?: string; instance?: string; connection?: string }
+  let body: {
+    event?: string
+    instance?: string
+    data?: { state?: string }
+  }
 
   try {
     body = await request.json()
@@ -23,24 +28,38 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  if (body.type !== "connection" || !body.instance || !body.connection) {
+  if (body.event !== "connection.update" || !body.instance || !body.data?.state) {
     return NextResponse.json({ ok: true })
   }
 
-  const newStatus = CONNECTION_MAP[body.connection]
+  const newStatus = STATE_MAP[body.data.state]
   if (!newStatus) {
     return NextResponse.json({ ok: true })
   }
 
   const supabase = getServiceClient()
 
-  const { data: instance, error } = await supabase
+  // Look up by worldmensage_nome first (Evolution instanceName), fall back to worldmensage_instance_id
+  let instance: { id: string; contractor_id: string; current_status: string } | null = null
+
+  const { data: byNome } = await supabase
     .from("instances")
     .select("id, contractor_id, current_status")
-    .eq("worldmensage_instance_id", body.instance)
+    .eq("worldmensage_nome", body.instance)
     .single()
 
-  if (error || !instance) {
+  if (byNome) {
+    instance = byNome
+  } else {
+    const { data: byInstanceId } = await supabase
+      .from("instances")
+      .select("id, contractor_id, current_status")
+      .eq("worldmensage_instance_id", body.instance)
+      .single()
+    instance = byInstanceId
+  }
+
+  if (!instance) {
     return NextResponse.json({ ok: true })
   }
 
@@ -50,20 +69,17 @@ export async function POST(request: NextRequest) {
 
   const now = new Date().toISOString()
 
-  // Close previous open log entry
   await supabase
     .from("status_logs")
     .update({ ended_at: now })
     .eq("instance_id", instance.id)
     .is("ended_at", null)
 
-  // Update instance status
   await supabase
     .from("instances")
     .update({ current_status: newStatus, last_sync_at: now })
     .eq("id", instance.id)
 
-  // Insert new log entry
   await supabase.from("status_logs").insert({
     instance_id: instance.id,
     contractor_id: instance.contractor_id,

@@ -1,67 +1,14 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
+import { fetchInstanceState } from "@/lib/worldmensage/client"
 import type { InstanceStatus } from "@/types"
 
-const BASE_URL = process.env.WORLDMENSAGE_BASE_URL!
-
-type PingResult = "connected" | "disconnected" | "unknown"
-
-function isDisconnectedError(text: string): boolean {
-  const keywords = [
-    "desconectado",
-    "sessão",
-    "sessao",
-    "session",
-    "instância",
-    "instancia",
-    "not connected",
-    "disconnected",
-    "qrcode",
-    "qr code",
-    "not authenticated",
-    "unauthorized",
-    "logout",
-    "acesso bloqueado",
-    "bloqueado",
-    "blocked",
-    "entre em contato",
-    "suporte",
-  ]
-  return keywords.some((kw) => text.includes(kw))
-}
-
-async function pingInstance(
-  worldmensageInstanceId: string,
-  token: string
-): Promise<PingResult> {
-  try {
-    const res = await fetch(`${BASE_URL}/send-text`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        token,
-        instance: worldmensageInstanceId,
-        to: "5500000000000",
-        message: "ping",
-      }),
-    })
-
-    const data: Record<string, unknown> = await res.json().catch(() => ({}))
-    const text = JSON.stringify(data).toLowerCase()
-
-    if (!res.ok) {
-      return isDisconnectedError(text) ? "disconnected" : "unknown"
-    }
-
-    if (data.erro === true) {
-      return isDisconnectedError(text) ? "disconnected" : "connected"
-    }
-
-    return "connected"
-  } catch {
-    return "unknown"
-  }
+const STATE_MAP: Record<string, InstanceStatus> = {
+  open: "connected",
+  close: "disconnected",
+  closing: "disconnected",
+  connecting: "reconnecting",
 }
 
 function getServiceClient() {
@@ -87,7 +34,7 @@ export async function GET(
 
   const { data: instance, error } = await supabase
     .from("instances")
-    .select("id, contractor_id, current_status, worldmensage_instance_id, worldmensage_token")
+    .select("id, contractor_id, current_status, worldmensage_nome, worldmensage_instance_id")
     .eq("id", params.id)
     .single()
 
@@ -95,27 +42,42 @@ export async function GET(
     return NextResponse.json({ error: "Instance not found" }, { status: 404 })
   }
 
-  if (!instance.worldmensage_token) {
+  const instanceName = instance.worldmensage_nome ?? instance.worldmensage_instance_id
+
+  if (!instanceName) {
     return NextResponse.json(
-      { error: "Instance has no token configured." },
+      { error: "Instance has no Evolution name configured." },
       { status: 422 }
     )
   }
 
-  const pingResult = await pingInstance(
-    instance.worldmensage_instance_id,
-    instance.worldmensage_token
-  )
+  let newStatus: InstanceStatus | null = null
 
-  if (pingResult === "unknown") {
+  try {
+    const stateResult = await fetchInstanceState(instanceName)
+    const rawState =
+      stateResult.instance?.state ?? stateResult.state ?? null
+
+    if (rawState) {
+      newStatus = STATE_MAP[rawState] ?? null
+    }
+  } catch {
+    // Evolution unreachable — return last known status
     return NextResponse.json({
       status: instance.current_status,
       synced_at: null,
-      warning: "Could not reach external service — showing last known status",
+      warning: "Could not reach Evolution API — showing last known status",
     })
   }
 
-  const newStatus = pingResult as InstanceStatus
+  if (!newStatus) {
+    return NextResponse.json({
+      status: instance.current_status,
+      synced_at: null,
+      warning: "Unknown state returned by Evolution API",
+    })
+  }
+
   const syncedAt = new Date().toISOString()
   const statusChanged = newStatus !== instance.current_status
 

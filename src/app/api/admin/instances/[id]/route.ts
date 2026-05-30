@@ -35,12 +35,12 @@ export async function PUT(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const { name, contractor_id, worldmensage_instance_id, worldmensage_token } =
+  const { name, contractor_id, worldmensage_nome, worldmensage_token } =
     await request.json()
 
-  if (!name || !contractor_id || !worldmensage_instance_id || !worldmensage_token) {
+  if (!name || !contractor_id || !worldmensage_nome) {
     return NextResponse.json(
-      { error: "name, contractor_id, worldmensage_instance_id and worldmensage_token are required" },
+      { error: "name, contractor_id and worldmensage_nome are required" },
       { status: 400 }
     )
   }
@@ -49,7 +49,13 @@ export async function PUT(
 
   const { data: instance, error } = await serviceClient
     .from("instances")
-    .update({ name, contractor_id, worldmensage_instance_id, worldmensage_token })
+    .update({
+      name,
+      contractor_id,
+      worldmensage_nome,
+      worldmensage_instance_id: worldmensage_nome,
+      worldmensage_token: worldmensage_token ?? null,
+    })
     .eq("id", params.id)
     .select()
     .single()

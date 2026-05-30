@@ -16,7 +16,7 @@ interface InstancesTableClientProps {
 interface EditForm {
   name: string
   contractor_id: string
-  worldmensage_instance_id: string
+  worldmensage_nome: string
   worldmensage_token: string
 }
 
@@ -29,7 +29,7 @@ export function InstancesTableClient({
   const [form, setForm] = useState<EditForm>({
     name: "",
     contractor_id: "",
-    worldmensage_instance_id: "",
+    worldmensage_nome: "",
     worldmensage_token: "",
   })
   const [saving, setSaving] = useState(false)
@@ -46,14 +46,14 @@ export function InstancesTableClient({
     setForm({
       name: instance.name,
       contractor_id: instance.contractor_id,
-      worldmensage_instance_id: instance.worldmensage_instance_id,
+      worldmensage_nome: instance.worldmensage_nome ?? instance.worldmensage_instance_id,
       worldmensage_token: instance.worldmensage_token ?? "",
     })
   }
 
   function closeEdit() {
     setEditing(null)
-    setForm({ name: "", contractor_id: "", worldmensage_instance_id: "", worldmensage_token: "" })
+    setForm({ name: "", contractor_id: "", worldmensage_nome: "", worldmensage_token: "" })
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -95,7 +95,7 @@ export function InstancesTableClient({
               <th className="text-left px-4 py-3 font-medium text-gray-700">Instância</th>
               <th className="text-left px-4 py-3 font-medium text-gray-700">Contratante</th>
               <th className="text-left px-4 py-3 font-medium text-gray-700">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">ID Worldmensage</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-700">Nome Evolution</th>
               <th className="text-left px-4 py-3 font-medium text-gray-700">Última Sync</th>
               <th className="px-4 py-3 w-10" />
             </tr>
@@ -111,7 +111,7 @@ export function InstancesTableClient({
                   <StatusBadge status={inst.current_status as InstanceStatus} />
                 </td>
                 <td className="px-4 py-3 text-gray-400 font-mono text-xs truncate max-w-[160px]">
-                  {inst.worldmensage_instance_id}
+                  {inst.worldmensage_nome ?? inst.worldmensage_instance_id}
                 </td>
                 <td className="px-4 py-3 text-gray-400 text-xs">
                   {inst.last_sync_at
@@ -189,22 +189,26 @@ export function InstancesTableClient({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ID da Instância Worldmensage <span className="text-red-500">*</span>
+                  Nome da Instância (Evolution) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  value={form.worldmensage_instance_id}
+                  value={form.worldmensage_nome}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, worldmensage_instance_id: e.target.value }))
+                    setForm((f) => ({ ...f, worldmensage_nome: e.target.value }))
                   }
                   required
+                  placeholder="Ex: avimus-principal"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900"
                 />
+                <p className="text-xs text-gray-400 mt-1">
+                  Nome da instância no painel Evolution API.
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Token Worldmensage <span className="text-red-500">*</span>
+                  Token da Instância
                 </label>
                 <input
                   type="text"
@@ -212,7 +216,7 @@ export function InstancesTableClient({
                   onChange={(e) =>
                     setForm((f) => ({ ...f, worldmensage_token: e.target.value }))
                   }
-                  required
+                  placeholder="Opcional"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900"
                 />
               </div>
