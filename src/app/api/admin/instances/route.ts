@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createInstance } from "@/lib/evolution/client"
 
 async function verifyAdmin(supabase: ReturnType<typeof createClient>) {
   const {
@@ -24,16 +25,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const { contractor_id, name, worldmensage_nome, worldmensage_instance_id, worldmensage_token } =
-    await request.json()
+  const { contractor_id, name, evolution_instance_name } = await request.json()
 
-  if (!contractor_id || !name || !worldmensage_nome || !worldmensage_token) {
+  if (!contractor_id || !name || !evolution_instance_name) {
     return NextResponse.json(
-      {
-        error:
-          "contractor_id, name, worldmensage_nome and worldmensage_token are required",
-      },
+      { error: "contractor_id, name and evolution_instance_name are required" },
       { status: 400 }
+    )
+  }
+
+  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook/evolution`
+
+  try {
+    await createInstance(evolution_instance_name, webhookUrl)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error"
+    return NextResponse.json(
+      { error: `Failed to create instance in Evolution: ${message}` },
+      { status: 502 }
     )
   }
 
@@ -42,16 +51,14 @@ export async function POST(request: NextRequest) {
     .insert({
       contractor_id,
       name,
-      worldmensage_nome,
-      worldmensage_instance_id: worldmensage_instance_id || worldmensage_nome,
-      worldmensage_token,
+      evolution_instance_name,
+      evolution_instance_id: evolution_instance_name,
       current_status: "disconnected",
     })
     .select()
     .single()
 
   if (error) {
-    console.log("SUPABASE INSERT ERROR:", error)
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 

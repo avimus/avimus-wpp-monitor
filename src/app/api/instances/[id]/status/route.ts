@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
-import { fetchInstanceState } from "@/lib/worldmensage/client"
+import { fetchInstanceState } from "@/lib/evolution/client"
 import type { InstanceStatus } from "@/types"
 
 const STATE_MAP: Record<string, InstanceStatus> = {
@@ -34,7 +34,7 @@ export async function GET(
 
   const { data: instance, error } = await supabase
     .from("instances")
-    .select("id, contractor_id, current_status, worldmensage_nome, worldmensage_instance_id")
+    .select("id, contractor_id, current_status, evolution_instance_name, evolution_instance_id")
     .eq("id", params.id)
     .single()
 
@@ -42,7 +42,7 @@ export async function GET(
     return NextResponse.json({ error: "Instance not found" }, { status: 404 })
   }
 
-  const instanceName = instance.worldmensage_nome ?? instance.worldmensage_instance_id
+  const instanceName = instance.evolution_instance_name ?? instance.evolution_instance_id
 
   if (!instanceName) {
     return NextResponse.json(
@@ -55,14 +55,9 @@ export async function GET(
 
   try {
     const stateResult = await fetchInstanceState(instanceName)
-    const rawState =
-      stateResult.instance?.state ?? stateResult.state ?? null
-
-    if (rawState) {
-      newStatus = STATE_MAP[rawState] ?? null
-    }
+    const rawState = stateResult.instance?.state ?? stateResult.state ?? null
+    if (rawState) newStatus = STATE_MAP[rawState] ?? null
   } catch {
-    // Evolution unreachable — return last known status
     return NextResponse.json({
       status: instance.current_status,
       synced_at: null,
@@ -80,7 +75,6 @@ export async function GET(
 
   const syncedAt = new Date().toISOString()
   const statusChanged = newStatus !== instance.current_status
-
   const serviceClient = getServiceClient()
 
   await serviceClient

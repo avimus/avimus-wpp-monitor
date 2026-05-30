@@ -35,12 +35,11 @@ export async function PUT(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const { name, contractor_id, worldmensage_nome, worldmensage_token } =
-    await request.json()
+  const { name, contractor_id, evolution_instance_name } = await request.json()
 
-  if (!name || !contractor_id || !worldmensage_nome) {
+  if (!name || !contractor_id || !evolution_instance_name) {
     return NextResponse.json(
-      { error: "name, contractor_id and worldmensage_nome are required" },
+      { error: "name, contractor_id and evolution_instance_name are required" },
       { status: 400 }
     )
   }
@@ -52,20 +51,17 @@ export async function PUT(
     .update({
       name,
       contractor_id,
-      worldmensage_nome,
-      worldmensage_instance_id: worldmensage_nome,
-      worldmensage_token: worldmensage_token ?? null,
+      evolution_instance_name,
+      evolution_instance_id: evolution_instance_name,
     })
     .eq("id", params.id)
     .select()
     .single()
 
   if (error) {
-    console.log("PUT /instances/[id] ERROR:", error)
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
-  // Keep status_logs in sync if contractor changed
   await serviceClient
     .from("status_logs")
     .update({ contractor_id })

@@ -13,8 +13,7 @@ export function InstanceAssignForm({ contractors }: InstanceAssignFormProps) {
   const router = useRouter()
   const [contractorId, setContractorId] = useState("")
   const [instanceName, setInstanceName] = useState("")
-  const [worldmensageNome, setWorldmensageNome] = useState("")
-  const [worldmensageToken, setWorldmensageToken] = useState("")
+  const [evolutionInstanceName, setEvolutionInstanceName] = useState("")
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -27,8 +26,7 @@ export function InstanceAssignForm({ contractors }: InstanceAssignFormProps) {
       body: JSON.stringify({
         contractor_id: contractorId,
         name: instanceName,
-        worldmensage_nome: worldmensageNome,
-        worldmensage_token: worldmensageToken,
+        evolution_instance_name: evolutionInstanceName,
       }),
     })
 
@@ -42,8 +40,7 @@ export function InstanceAssignForm({ contractors }: InstanceAssignFormProps) {
 
     toast.success("Instância criada com sucesso.")
     setInstanceName("")
-    setWorldmensageNome("")
-    setWorldmensageToken("")
+    setEvolutionInstanceName("")
     setContractorId("")
     router.refresh()
   }
@@ -85,35 +82,18 @@ export function InstanceAssignForm({ contractors }: InstanceAssignFormProps) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Nome da Instância (Worldmensage) <span className="text-red-500">*</span>
+          Nome da Instância (Evolution API) <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
-          value={worldmensageNome}
-          onChange={(e) => setWorldmensageNome(e.target.value)}
+          value={evolutionInstanceName}
+          onChange={(e) => setEvolutionInstanceName(e.target.value)}
           required
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900"
-          placeholder="Ex: 189YJ260530030517OWN1329"
+          placeholder="Ex: avimus-principal"
         />
         <p className="text-xs text-gray-400 mt-1">
-          Coluna <strong>Nome</strong> no painel Worldmensage. Usado para reconectar — nunca muda.
-        </p>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Token da Instância Worldmensage <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          value={worldmensageToken}
-          onChange={(e) => setWorldmensageToken(e.target.value)}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900"
-          placeholder="Ex: 4W8A3-4RN-0584R"
-        />
-        <p className="text-xs text-gray-400 mt-1">
-          Token da conta Worldmensage que gerencia esta instância.
+          Identificador único da instância na Evolution API. Será criada automaticamente.
         </p>
       </div>
 
@@ -122,7 +102,7 @@ export function InstanceAssignForm({ contractors }: InstanceAssignFormProps) {
         disabled={loading}
         className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-700 disabled:opacity-50 transition-colors"
       >
-        {loading ? "Salvando..." : "Criar Instância"}
+        {loading ? "Criando..." : "Criar Instância"}
       </button>
     </form>
   )

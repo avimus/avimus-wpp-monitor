@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { connectInstance } from "@/lib/worldmensage/client"
+import { connectInstance } from "@/lib/evolution/client"
 
 export async function POST(
   _: Request,
@@ -18,7 +18,7 @@ export async function POST(
 
   const { data: instance, error } = await supabase
     .from("instances")
-    .select("id, current_status, worldmensage_nome, worldmensage_instance_id")
+    .select("id, current_status, evolution_instance_name, evolution_instance_id")
     .eq("id", params.id)
     .single()
 
@@ -26,7 +26,7 @@ export async function POST(
     return NextResponse.json({ error: "Instance not found" }, { status: 404 })
   }
 
-  const instanceName = instance.worldmensage_nome ?? instance.worldmensage_instance_id
+  const instanceName = instance.evolution_instance_name ?? instance.evolution_instance_id
 
   if (!instanceName) {
     return NextResponse.json(

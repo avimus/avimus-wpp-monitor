@@ -39,25 +39,11 @@ export async function POST(request: NextRequest) {
 
   const supabase = getServiceClient()
 
-  // Look up by worldmensage_nome first (Evolution instanceName), fall back to worldmensage_instance_id
-  let instance: { id: string; contractor_id: string; current_status: string } | null = null
-
-  const { data: byNome } = await supabase
+  const { data: instance } = await supabase
     .from("instances")
     .select("id, contractor_id, current_status")
-    .eq("worldmensage_nome", body.instance)
+    .eq("evolution_instance_name", body.instance)
     .single()
-
-  if (byNome) {
-    instance = byNome
-  } else {
-    const { data: byInstanceId } = await supabase
-      .from("instances")
-      .select("id, contractor_id, current_status")
-      .eq("worldmensage_instance_id", body.instance)
-      .single()
-    instance = byInstanceId
-  }
 
   if (!instance) {
     return NextResponse.json({ ok: true })

@@ -16,8 +16,7 @@ interface InstancesTableClientProps {
 interface EditForm {
   name: string
   contractor_id: string
-  worldmensage_nome: string
-  worldmensage_token: string
+  evolution_instance_name: string
 }
 
 export function InstancesTableClient({
@@ -29,12 +28,10 @@ export function InstancesTableClient({
   const [form, setForm] = useState<EditForm>({
     name: "",
     contractor_id: "",
-    worldmensage_nome: "",
-    worldmensage_token: "",
+    evolution_instance_name: "",
   })
   const [saving, setSaving] = useState(false)
 
-  // Sync when server re-renders after a new instance is created
   useEffect(() => {
     setInstances(initialInstances)
   }, [initialInstances])
@@ -46,14 +43,14 @@ export function InstancesTableClient({
     setForm({
       name: instance.name,
       contractor_id: instance.contractor_id,
-      worldmensage_nome: instance.worldmensage_nome ?? instance.worldmensage_instance_id,
-      worldmensage_token: instance.worldmensage_token ?? "",
+      evolution_instance_name:
+        instance.evolution_instance_name ?? instance.evolution_instance_id,
     })
   }
 
   function closeEdit() {
     setEditing(null)
-    setForm({ name: "", contractor_id: "", worldmensage_nome: "", worldmensage_token: "" })
+    setForm({ name: "", contractor_id: "", evolution_instance_name: "" })
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -111,7 +108,7 @@ export function InstancesTableClient({
                   <StatusBadge status={inst.current_status as InstanceStatus} />
                 </td>
                 <td className="px-4 py-3 text-gray-400 font-mono text-xs truncate max-w-[160px]">
-                  {inst.worldmensage_nome ?? inst.worldmensage_instance_id}
+                  {inst.evolution_instance_name ?? inst.evolution_instance_id}
                 </td>
                 <td className="px-4 py-3 text-gray-400 text-xs">
                   {inst.last_sync_at
@@ -140,7 +137,6 @@ export function InstancesTableClient({
         </table>
       </div>
 
-      {/* Edit modal */}
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
@@ -189,34 +185,16 @@ export function InstancesTableClient({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nome da Instância (Evolution) <span className="text-red-500">*</span>
+                  Nome da Instância (Evolution API) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  value={form.worldmensage_nome}
+                  value={form.evolution_instance_name}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, worldmensage_nome: e.target.value }))
+                    setForm((f) => ({ ...f, evolution_instance_name: e.target.value }))
                   }
                   required
                   placeholder="Ex: avimus-principal"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  Nome da instância no painel Evolution API.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Token da Instância
-                </label>
-                <input
-                  type="text"
-                  value={form.worldmensage_token}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, worldmensage_token: e.target.value }))
-                  }
-                  placeholder="Opcional"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900"
                 />
               </div>
