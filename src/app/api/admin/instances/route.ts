@@ -24,14 +24,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
-  const { contractor_id, name, worldmensage_instance_id, worldmensage_token } =
+  const { contractor_id, name, worldmensage_nome, worldmensage_instance_id, worldmensage_token } =
     await request.json()
 
-  if (!contractor_id || !name || !worldmensage_instance_id || !worldmensage_token) {
+  if (!contractor_id || !name || !worldmensage_nome || !worldmensage_token) {
     return NextResponse.json(
       {
         error:
-          "contractor_id, name, worldmensage_instance_id and worldmensage_token are required",
+          "contractor_id, name, worldmensage_nome and worldmensage_token are required",
       },
       { status: 400 }
     )
@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
     .insert({
       contractor_id,
       name,
-      worldmensage_instance_id,
+      worldmensage_nome,
+      worldmensage_instance_id: worldmensage_instance_id || worldmensage_nome,
       worldmensage_token,
       current_status: "disconnected",
     })

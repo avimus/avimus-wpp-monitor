@@ -20,6 +20,7 @@ export interface Instance {
   id: string
   contractor_id: string
   name: string
+  worldmensage_nome: string | null
   worldmensage_instance_id: string
   worldmensage_token: string | null
   current_status: InstanceStatus

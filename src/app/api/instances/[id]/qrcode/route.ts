@@ -18,7 +18,7 @@ export async function POST(
 
   const { data: instance, error } = await supabase
     .from("instances")
-    .select("id, current_status, worldmensage_instance_id, worldmensage_token")
+    .select("id, current_status, worldmensage_nome, worldmensage_instance_id, worldmensage_token")
     .eq("id", params.id)
     .single()
 
@@ -33,9 +33,13 @@ export async function POST(
     )
   }
 
-  if (!instance.worldmensage_instance_id) {
+  // worldmensage_nome é o identificador fixo para /instance-create.
+  // Fallback para worldmensage_instance_id em instâncias cadastradas antes desta coluna existir.
+  const nomeParaChamada = instance.worldmensage_nome ?? instance.worldmensage_instance_id
+
+  if (!nomeParaChamada) {
     return NextResponse.json(
-      { error: "Instance has no Worldmensage ID configured." },
+      { error: "Instance has no Worldmensage nome configured." },
       { status: 422 }
     )
   }
@@ -54,7 +58,7 @@ export async function POST(
   try {
     const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhook/worldmensage`
     const result = await createInstance(
-      instance.worldmensage_instance_id,
+      nomeParaChamada,
       webhookUrl,
       instance.worldmensage_token
     )
