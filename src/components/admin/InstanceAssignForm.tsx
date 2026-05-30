@@ -85,7 +85,7 @@ export function InstanceAssignForm({ contractors }: InstanceAssignFormProps) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          ID da Instância Worldmensage <span className="text-red-500">*</span>
+          Nome da Instância Worldmensage <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -93,10 +93,10 @@ export function InstanceAssignForm({ contractors }: InstanceAssignFormProps) {
           onChange={(e) => setWorldmensageInstanceId(e.target.value)}
           required
           className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900"
-          placeholder="Ex: C1W120426054517OWN1329"
+          placeholder="Ex: 189YJ260530030517OWN1329"
         />
         <p className="text-xs text-gray-400 mt-1">
-          Identificador da instância no painel Worldmensage.
+          Coluna <strong>Nome</strong> no painel Worldmensage — não confundir com a coluna "Instância".
         </p>
       </div>
 
