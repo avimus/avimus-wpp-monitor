@@ -49,7 +49,6 @@ async function pingInstance(
 
     const data: Record<string, unknown> = await res.json().catch(() => ({}))
     const text = JSON.stringify(data).toLowerCase()
-    console.log("PING RESPONSE:", { status: res.status, data, text })
 
     if (!res.ok) {
       return isDisconnectedError(text) ? "disconnected" : "unknown"

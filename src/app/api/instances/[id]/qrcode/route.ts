@@ -33,10 +33,11 @@ export async function POST(
     )
   }
 
-  if (instance.current_status !== "disconnected") {
+  const reconnectable = ["disconnected", "reconnecting"]
+  if (!reconnectable.includes(instance.current_status)) {
     return NextResponse.json(
       {
-        error: "Instance is not in disconnected state",
+        error: "Instance is not in a reconnectable state",
         current_status: instance.current_status,
       },
       { status: 409 }
@@ -50,7 +51,6 @@ export async function POST(
       webhookUrl,
       instance.worldmensage_token
     )
-    console.log("WORLDMENSAGE RESULT:", result)
 
     await supabase
       .from("instances")

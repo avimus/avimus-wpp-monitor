@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -20,6 +20,12 @@ export function InstanceCard({ instance }: InstanceCardProps) {
   )
   const [lastSyncAt, setLastSyncAt] = useState(instance.last_sync_at)
   const [qrcode, setQrcode] = useState<string | null>(null)
+
+  // Sync from parent when Realtime pushes updates through DashboardClient
+  useEffect(() => {
+    setCurrentStatus(instance.current_status)
+    setLastSyncAt(instance.last_sync_at)
+  }, [instance.current_status, instance.last_sync_at])
   const [loadingQr, setLoadingQr] = useState(false)
   const [loadingStatus, setLoadingStatus] = useState(false)
 
