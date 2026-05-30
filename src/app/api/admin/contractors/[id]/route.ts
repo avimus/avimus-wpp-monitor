@@ -68,7 +68,7 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  _: Request,
   { params }: { params: { id: string } }
 ) {
   const supabase = createClient()

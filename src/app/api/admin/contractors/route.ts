@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ contractor_id: data.id, email }, { status: 201 })
 }
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   const supabase = createClient()
   const adminUser = await verifyAdmin(supabase)
 

@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createInstance } from "@/lib/worldmensage/client"
 
 export async function POST(
-  _request: NextRequest,
+  _: Request,
   { params }: { params: { id: string } }
 ) {
   const supabase = createClient()
